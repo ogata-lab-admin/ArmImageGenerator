@@ -1,0 +1,54 @@
+# ArmImageGenerator CMake config file
+#
+# This file sets the following variables:
+# ArmImageGenerator_FOUND - Always TRUE.
+# ArmImageGenerator_INCLUDE_DIRS - Directories containing the ArmImageGenerator include files.
+# ArmImageGenerator_IDL_DIRS - Directories containing the ArmImageGenerator IDL files.
+# ArmImageGenerator_LIBRARIES - Libraries needed to use ArmImageGenerator.
+# ArmImageGenerator_DEFINITIONS - Compiler flags for ArmImageGenerator.
+# ArmImageGenerator_VERSION - The version of ArmImageGenerator found.
+# ArmImageGenerator_VERSION_MAJOR - The major version of ArmImageGenerator found.
+# ArmImageGenerator_VERSION_MINOR - The minor version of ArmImageGenerator found.
+# ArmImageGenerator_VERSION_REVISION - The revision version of ArmImageGenerator found.
+# ArmImageGenerator_VERSION_CANDIDATE - The candidate version of ArmImageGenerator found.
+
+message(STATUS "Found ArmImageGenerator-@PROJECT_VERSION@")
+set(ArmImageGenerator_FOUND TRUE)
+
+find_package(<dependency> REQUIRED)
+
+#set(ArmImageGenerator_INCLUDE_DIRS
+#    "@CMAKE_INSTALL_PREFIX@/include/@PROJECT_NAME_LOWER@-@PROJECT_VERSION_MAJOR@"
+#    ${<dependency>_INCLUDE_DIRS}
+#    )
+#
+#set(ArmImageGenerator_IDL_DIRS
+#    "@CMAKE_INSTALL_PREFIX@/include/@PROJECT_NAME_LOWER@-@PROJECT_VERSION_MAJOR@/idl")
+set(ArmImageGenerator_INCLUDE_DIRS
+    "@CMAKE_INSTALL_PREFIX@/include/@CPACK_PACKAGE_FILE_NAME@"
+    ${<dependency>_INCLUDE_DIRS}
+    )
+set(ArmImageGenerator_IDL_DIRS
+    "@CMAKE_INSTALL_PREFIX@/include/@CPACK_PACKAGE_FILE_NAME@/idl")
+
+
+if(WIN32)
+    set(ArmImageGenerator_LIBRARIES
+        "@CMAKE_INSTALL_PREFIX@/@LIB_INSTALL_DIR@/@CMAKE_SHARED_LIBRARY_PREFIX@@PROJECT_NAME_LOWER@@CMAKE_STATIC_LIBRARY_SUFFIX@"
+        ${<dependency>_LIBRARIES}
+        )
+else(WIN32)
+    set(ArmImageGenerator_LIBRARIES
+        "@CMAKE_INSTALL_PREFIX@/@LIB_INSTALL_DIR@/@CMAKE_SHARED_LIBRARY_PREFIX@@PROJECT_NAME_LOWER@@CMAKE_SHARED_LIBRARY_SUFFIX@"
+        ${<dependency>_LIBRARIES}
+        )
+endif(WIN32)
+
+set(ArmImageGenerator_DEFINITIONS ${<dependency>_DEFINITIONS})
+
+set(ArmImageGenerator_VERSION @PROJECT_VERSION@)
+set(ArmImageGenerator_VERSION_MAJOR @PROJECT_VERSION_MAJOR@)
+set(ArmImageGenerator_VERSION_MINOR @PROJECT_VERSION_MINOR@)
+set(ArmImageGenerator_VERSION_REVISION @PROJECT_VERSION_REVISION@)
+set(ArmImageGenerator_VERSION_CANDIDATE @PROJECT_VERSION_CANDIDATE@)
+
