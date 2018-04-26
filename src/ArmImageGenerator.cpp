@@ -46,6 +46,8 @@ static const char* armimagegenerator_spec[] =
     "conf.default.j0step", "0.157076",
     "conf.default.j1step", "0.157076",
 	"conf.default.wait_interval", "1.0",
+    "conf.default.camera_wait", "3.0",
+    "conf.default.gripper_close_ratio", "0.1",
     // Widget
     "conf.__widget__.debug", "text",
     "conf.__widget__.j0max", "text",
@@ -54,7 +56,9 @@ static const char* armimagegenerator_spec[] =
     "conf.__widget__.j1min", "text",
     "conf.__widget__.j0step", "text",
     "conf.__widget__.j1step", "text",
+    "conf.__widget__.gripper_close_ratio", "slider.0.1",
     // Constraints
+    "conf.__constraints__.gripper_close_ratio", "0.0<=x<=1.0",    
     ""
   };
 // </rtc-template>
@@ -115,6 +119,8 @@ RTC::ReturnCode_t ArmImageGenerator::onInitialize()
   bindParameter("j0step", m_j0step, "0.157076");
   bindParameter("j1step", m_j1step, "0.157076");
   bindParameter("wait_interval", m_wait_interval, "0.2");
+  bindParameter("camera_wait_time", m_camera_wait_time, "3.0");
+  bindParameter("gripper_close_ratio", m_gripper_close_ratio, "0.1");
   // </rtc-template>
   
   return RTC::RTC_OK;
@@ -160,13 +166,13 @@ RTC::ReturnCode_t ArmImageGenerator::onActivated(RTC::UniqueId ec_id)
 				RTC::PortProfile_var pp1 = pp.connector_profiles[0].ports[1]->get_port_profile();
 				RTC::ComponentProfile_var cp1 = pp1->owner->get_component_profile();
 				RTC::ExecutionContext_var ec1 = pp1->owner->get_context(0);
-				if (ec1->get_component_state(pp1->owner) == RTC::LifeCycleState::ACTIVE_STATE) {
+				if (ec1->get_component_state(pp1->owner) == RTC::ACTIVE_STATE) {
 					break;
 				}
 			}
 			else {
 				RTC::ExecutionContext_var ec0 = pp0->owner->get_context(0);
-				if (ec0->get_component_state(pp0->owner) == RTC::LifeCycleState::ACTIVE_STATE) {
+				if (ec0->get_component_state(pp0->owner) == RTC::ACTIVE_STATE) {
 					break;
 				}
 			}
@@ -199,7 +205,7 @@ RTC::ReturnCode_t ArmImageGenerator::onActivated(RTC::UniqueId ec_id)
 	
 	std::cout << "[ArmImageGenerator] Ready." << std::endl;
 
-	time_t now = std::time(nullptr);
+	time_t now = std::time(NULL);
 	struct tm* localNow = std::localtime(&now);
 	std::ostringstream ss;
 	ss << "log"
@@ -229,7 +235,8 @@ RTC::ReturnCode_t ArmImageGenerator::onActivated(RTC::UniqueId ec_id)
 	configFile << "wait_interval: " << m_wait_interval << std::endl;
 	configFile.close();
 	*/
-	m_JointLog.open(m_logDir + "/joints.csv", std::ofstream::out);
+    std::string filename = m_logDir + "/joints.csv";
+	m_JointLog.open(filename.c_str(), std::ios::out);//, std::fstream::out);
 
 	m_JointLog << "x, y, theta, ImageFilename" << std::endl;
 	return RTC::RTC_OK;
@@ -324,7 +331,7 @@ RTC::ReturnCode_t ArmImageGenerator::onExecute(RTC::UniqueId ec_id)
 
   std::cout << "[ArmImageGenerator] Waiting for CameraImage...." << std::ends;
 
-  time_t now = std::time(nullptr);
+  time_t now = std::time(NULL);
   struct tm* localNow = std::localtime(&now);
   std::ostringstream ss;
   ss 
@@ -336,6 +343,7 @@ RTC::ReturnCode_t ArmImageGenerator::onExecute(RTC::UniqueId ec_id)
     << std::setw(2) << std::setfill('0') << localNow->tm_min
     << std::setw(2) << std::setfill('0') << localNow->tm_sec
     << ".png";
+  coil::sleep(m_camera_wait_time);
   
   std::string filename = ss.str();
 
@@ -415,7 +423,9 @@ RTC::ReturnCode_t ArmImageGenerator::onExecute(RTC::UniqueId ec_id)
   coil::sleep(m_sleepTime);
 
   std::cout << "[ArmImageGenerator] Hold" << std::endl;
-  ret1 = m_manipMiddle->moveGripper(10);
+
+  float ratio = m_gripper_close_ratio > 1.0 ? 1.0 : m_gripper_close_ratio < 0.0 ? 0 : m_gripper_close_ratio;
+  ret1 = m_manipMiddle->moveGripper(100 * m_gripper_close_ratio);
   coil::sleep(m_sleepTime);
 
   std::cout << "[ArmImageGenerator] Up" << std::endl;
