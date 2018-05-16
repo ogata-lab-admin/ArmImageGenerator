@@ -155,8 +155,8 @@ RTC::ReturnCode_t ArmImageGenerator::onActivated(RTC::UniqueId ec_id)
 {
 	std::cout << "[ArmImageGenerator] Initializing Arm and Parameters" << std::endl;
 
-	//coil::TimeValue tv1(5.0);
-	//coil::sleep(tv1);
+	coil::TimeValue tv1(5.0);
+	coil::sleep(tv1);
 
 	std::cout << "[ArmImageGenerator] Waiting Arm Component is Activated....." << std::endl;
 	while (true) {
@@ -276,6 +276,7 @@ RTC::ReturnCode_t ArmImageGenerator::onActivated(RTC::UniqueId ec_id)
    double ylimit[2] = {-120, 120};
    double thlimit[2] = {-M_PI+1.0e-10, M_PI-1.0e-10};
   
+
    double x = Uniform() * (xlimit[1] - xlimit[0]) + xlimit[0];
    double y = Uniform() * (ylimit[1] - ylimit[0]) + ylimit[0];
    double th = Uniform() * (thlimit[1] - thlimit[0]) + thlimit[0];
@@ -356,6 +357,7 @@ RTC::ReturnCode_t ArmImageGenerator::onActivated(RTC::UniqueId ec_id)
    /// Capture Image and Save
    bool imageArrived = false;
    //long counter = 0;
+
   //Inport data check
   while (m_cameraIn.isNew() && (!imageArrived)) {
     m_cameraIn.read();
@@ -375,6 +377,7 @@ RTC::ReturnCode_t ArmImageGenerator::onActivated(RTC::UniqueId ec_id)
     m_buffer.create(height, width, CV_8UC1);
   
   long data_length = m_camera.data.image.raw_data.length();
+
   //long image_size = width * height * channels;
   
   if (m_camera.data.image.format == Img::CF_RGB) {
