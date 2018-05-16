@@ -276,8 +276,24 @@ class ArmImageGenerator
    * - DefaultValue: 0.157076
    */
   float m_j1step;
-
+  /*!
+   * 
+   * - Name:  wait_interval
+   * - DefaultValue: 1.0
+   */
   float m_wait_interval;
+  /*!
+   * 
+   * - Name:  camera_wait_time
+   * - DefaultValue: 3.0
+   */
+  float m_camera_wait_time ;
+  /*!
+   * 
+   * - Name:  gripper_close_ratio
+   * - DefaultValue: 0.1
+   */
+  float m_gripper_close_ratio;
 
   // </rtc-template>
 

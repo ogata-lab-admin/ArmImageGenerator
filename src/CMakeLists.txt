@@ -2,7 +2,7 @@ set(comp_srcs ArmImageGenerator.cpp )
 set(standalone_srcs ArmImageGeneratorComp.cpp)
 
 
-find_package(OPENCV REQUIRED)
+find_package(OpenCV REQUIRED)
 
 if (DEFINED OPENRTM_INCLUDE_DIRS)
   string(REGEX REPLACE "-I" ";"
