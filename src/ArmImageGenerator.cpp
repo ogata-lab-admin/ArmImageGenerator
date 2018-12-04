@@ -149,10 +149,15 @@ RTC::ReturnCode_t ArmImageGenerator::onInitialize()
   bindParameter("j1min", m_j1min, "-1.57076");
   bindParameter("j0step", m_j0step, "0.157076");
   bindParameter("j1step", m_j1step, "0.157076");
+
+  // the interval until the next movement
   bindParameter("wait_interval", m_wait_interval, "0.2");
+  // the wating time for taking a picuture 
   bindParameter("camera_wait_time", m_camera_wait_time, "3.0");
+  // the ratio of closed gripper
   bindParameter("gripper_close_ratio", m_gripper_close_ratio, "0.1");
 
+  // the position for taking a picture 
   bindParameter("camera_jointPos0", m_camera_jointPos0, "M_PI/2");
   bindParameter("camera_jointPos1", m_camera_jointPos1, "0");
   bindParameter("camera_jointPos2", m_camera_jointPos2, "M_PI/2");
@@ -160,6 +165,7 @@ RTC::ReturnCode_t ArmImageGenerator::onInitialize()
   bindParameter("camera_jointPos4", m_camera_jointPos4, "M_PI/2");
   bindParameter("camera_jointPos5", m_camera_jointPos5, "0");
 
+  // the initial position
   bindParameter("initial_jointPos0", m_initial_jointPos0, "0");
   bindParameter("initial_jointPos1", m_initial_jointPos1, "0");
   bindParameter("initial_jointPos2", m_initial_jointPos2, "M_PI/2");
@@ -232,6 +238,8 @@ RTC::ReturnCode_t ArmImageGenerator::onActivated(RTC::UniqueId ec_id)
 	  std::cout << " ERRORCODE    :" << ret->id << std::endl;
 	  std::cout << " ERRORMESSAGE :" << ret->comment << std::endl;
 	}
+
+    // the speed of movement
  	ret = m_manipMiddle->setSpeedJoint(20);
 	if (ret->id != JARA_ARM::OK) {
 	  std::cout << "ERROR in ServoON" << std::endl;
@@ -239,6 +247,7 @@ RTC::ReturnCode_t ArmImageGenerator::onActivated(RTC::UniqueId ec_id)
 	  std::cout << " ERRORMESSAGE :" << ret->comment << std::endl;
 	}
 
+    // set the initial position
  	m_jointPos->length(6);
  	m_jointPos[0] = m_initial_jointPos0;
  	m_jointPos[1] = m_initial_jointPos1;

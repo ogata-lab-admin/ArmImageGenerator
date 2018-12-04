@@ -294,15 +294,22 @@ class ArmImageGenerator
    * - DefaultValue: 0.1
    */
   float m_gripper_close_ratio;
-
-
+  /*!
+  *
+  * - Name:  camera_joint0-5
+  * - DefaultValue: M_PI/2, 0, M_PI/2, 0, M_PI/2, 0
+  */
   float m_camera_jointPos0;
   float m_camera_jointPos1;
   float m_camera_jointPos2;
   float m_camera_jointPos3;
   float m_camera_jointPos4;
   float m_camera_jointPos5;
-
+  /*!
+  *
+  * - Name:  initial_joint0-5
+  * - DefaultValue: 0, 0, M_PI/2, 0, M_PI/2, 0
+  */
   float m_initial_jointPos0;
   float m_initial_jointPos1;
   float m_initial_jointPos2;
