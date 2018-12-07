@@ -10,7 +10,7 @@
 #include "ArmImageGenerator.h"
 
 #include <iomanip>
-#include <fstream>
+//#include <fstream>
 #include <ctime>
 
 
@@ -48,6 +48,21 @@ static const char* armimagegenerator_spec[] =
     "conf.default.j0step", "0.157076",
     "conf.default.j1step", "0.157076",
 	"conf.default.wait_interval", "1.0",
+    "conf.default.camera_wait_time", "3.0",
+    "conf.default.gripper_close_ratio", "0.1",
+    "conf.default.camera_jointPos0", "M_PI/2",
+    "conf.default.camera_jointPos1", "0",
+    "conf.default.camera_jointPos2", "M_PI/2",
+    "conf.default.camera_jointPos3", "0",
+    "conf.default.camera_jointPos4", "M_PI/2",
+    "conf.default.camera_jointPos5", "0",
+    "conf.default.initial_jointPos0", "0",
+    "conf.default.initial_jointPos1", "0",
+    "conf.default.initial_jointPos2", "M_PI/2",
+    "conf.default.initial_jointPos3", "0",
+    "conf.default.initial_jointPos4", "M_PI/2",
+    "conf.default.initial_jointPos5", "0",    
+    
     // Widget
     "conf.__widget__.debug", "text",
     "conf.__widget__.j0max", "text",
@@ -56,7 +71,25 @@ static const char* armimagegenerator_spec[] =
     "conf.__widget__.j1min", "text",
     "conf.__widget__.j0step", "text",
     "conf.__widget__.j1step", "text",
+
+    "conf.__widget__.camera_jointPos0", "text",
+    "conf.__widget__.camera_jointPos1", "text",
+    "conf.__widget__.camera_jointPos2", "text",
+    "conf.__widget__.camera_jointPos3", "text",
+    "conf.__widget__.camera_jointPos4", "text",
+    "conf.__widget__.camera_jointPos5", "text",
+
+    "conf.__widget__.initial_jointPos0", "text",
+    "conf.__widget__.initial_jointPos1", "text",
+    "conf.__widget__.initial_jointPos2", "text",
+    "conf.__widget__.initial_jointPos3", "text",
+    "conf.__widget__.initial_jointPos4", "text",
+    "conf.__widget__.initial_jointPos5", "text",
+
+    
+    "conf.__widget__.gripper_close_ratio", "slider.0.1",
     // Constraints
+    "conf.__constraints__.gripper_close_ratio", "0.0<=x<=1.0",
     ""
   };
 // </rtc-template>
@@ -116,7 +149,30 @@ RTC::ReturnCode_t ArmImageGenerator::onInitialize()
   bindParameter("j1min", m_j1min, "-1.57076");
   bindParameter("j0step", m_j0step, "0.157076");
   bindParameter("j1step", m_j1step, "0.157076");
+
+  // the interval until the next movement
   bindParameter("wait_interval", m_wait_interval, "0.2");
+  // the wating time for taking a picuture 
+  bindParameter("camera_wait_time", m_camera_wait_time, "3.0");
+  // the ratio of closed gripper
+  bindParameter("gripper_close_ratio", m_gripper_close_ratio, "0.1");
+
+  // the position for taking a picture 
+  bindParameter("camera_jointPos0", m_camera_jointPos0, "M_PI/2");
+  bindParameter("camera_jointPos1", m_camera_jointPos1, "0");
+  bindParameter("camera_jointPos2", m_camera_jointPos2, "M_PI/2");
+  bindParameter("camera_jointPos3", m_camera_jointPos3, "0");
+  bindParameter("camera_jointPos4", m_camera_jointPos4, "M_PI/2");
+  bindParameter("camera_jointPos5", m_camera_jointPos5, "0");
+
+  // the initial position
+  bindParameter("initial_jointPos0", m_initial_jointPos0, "0");
+  bindParameter("initial_jointPos1", m_initial_jointPos1, "0");
+  bindParameter("initial_jointPos2", m_initial_jointPos2, "M_PI/2");
+  bindParameter("initial_jointPos3", m_initial_jointPos3, "0");
+  bindParameter("initial_jointPos4", m_initial_jointPos4, "M_PI/2");
+  bindParameter("initial_jointPos5", m_initial_jointPos5, "0");
+  
   // </rtc-template>
   
   return RTC::RTC_OK;
@@ -176,16 +232,29 @@ RTC::ReturnCode_t ArmImageGenerator::onActivated(RTC::UniqueId ec_id)
  	}
 
 
- 	m_manipCommon->servoON();
- 	m_manipMiddle->setSpeedJoint(20);
+	JARA_ARM::RETURN_ID_var ret = m_manipCommon->servoON();
+	if (ret->id != JARA_ARM::OK) {
+	  std::cout << "ERROR in ServoON" << std::endl;
+	  std::cout << " ERRORCODE    :" << ret->id << std::endl;
+	  std::cout << " ERRORMESSAGE :" << ret->comment << std::endl;
+	}
 
+    // the speed of movement
+ 	ret = m_manipMiddle->setSpeedJoint(20);
+	if (ret->id != JARA_ARM::OK) {
+	  std::cout << "ERROR in ServoON" << std::endl;
+	  std::cout << " ERRORCODE    :" << ret->id << std::endl;
+	  std::cout << " ERRORMESSAGE :" << ret->comment << std::endl;
+	}
+
+    // set the initial position
  	m_jointPos->length(6);
- 	m_jointPos[0] = 0;
- 	m_jointPos[1] = 0;
- 	m_jointPos[2] = M_PI/2;
- 	m_jointPos[3] = 0;
- 	m_jointPos[4] = M_PI/2;
- 	m_jointPos[5] = 0;
+ 	m_jointPos[0] = m_initial_jointPos0;
+ 	m_jointPos[1] = m_initial_jointPos1;
+ 	m_jointPos[2] = m_initial_jointPos2;
+ 	m_jointPos[3] = m_initial_jointPos3;
+ 	m_jointPos[4] = m_initial_jointPos4;
+ 	m_jointPos[5] = m_initial_jointPos5;
 
  	//m_manipMiddle->movePTPJointAbs(m_jointPos);
 
@@ -232,9 +301,10 @@ RTC::ReturnCode_t ArmImageGenerator::onActivated(RTC::UniqueId ec_id)
  	configFile.close();
  	*/
      std::string filename = m_logDir + "/joints.csv";
- 	m_JointLog.open(filename.c_str(), std::ios::out);//std::ofstream::out);
+ 	m_JointLog.open(filename.c_str(), std::ios::out);//, std::ofstream::out);
 
  	m_JointLog << "x, y, theta, ImageFilename" << std::endl;
+    
  	return RTC::RTC_OK;
  }
 
@@ -247,7 +317,12 @@ RTC::ReturnCode_t ArmImageGenerator::onActivated(RTC::UniqueId ec_id)
  	m_jointPos[2] = M_PI/2;
  	m_jointPos[4] = M_PI/2;
 	
- 	m_manipMiddle->movePTPJointAbs(m_jointPos);
+ 	JARA_ARM::RETURN_ID_var ret = m_manipMiddle->movePTPJointAbs(m_jointPos);
+	if (ret->id != JARA_ARM::OK) {
+	  std::cout << "ERROR in ServoON" << std::endl;
+	  std::cout << " ERRORCODE    :" << ret->id << std::endl;
+	  std::cout << " ERRORMESSAGE :" << ret->comment << std::endl;
+	}
   
  	m_JointLog.close();
 
@@ -269,6 +344,7 @@ RTC::ReturnCode_t ArmImageGenerator::onActivated(RTC::UniqueId ec_id)
    double ylimit[2] = {-120, 120};
    double thlimit[2] = {-M_PI+1.0e-10, M_PI-1.0e-10};
   
+
    double x = Uniform() * (xlimit[1] - xlimit[0]) + xlimit[0];
    double y = Uniform() * (ylimit[1] - ylimit[0]) + ylimit[0];
    double th = Uniform() * (thlimit[1] - thlimit[0]) + thlimit[0];
@@ -293,37 +369,77 @@ RTC::ReturnCode_t ArmImageGenerator::onActivated(RTC::UniqueId ec_id)
    carPos.carPos[2][0] =  0.0; carPos.carPos[2][1] = 0; carPos.carPos[2][2] = -1.0; carPos.carPos[2][3] = z;
    carPos.elbow = 1.0;
    carPos.structFlag = 1;
-   JARA_ARM::RETURN_ID_var ret1 = m_manipMiddle->movePTPCartesianAbs(carPos);
+   JARA_ARM::RETURN_ID_var ret = m_manipMiddle->movePTPCartesianAbs(carPos);
+   if (ret->id != JARA_ARM::OK) {
+     
+     return RTC::RTC_OK;
+     
+     std::cout << "ERROR in ServoON" << std::endl;
+     std::cout << " ERRORCODE    :" << ret->id << std::endl;
+     std::cout << " ERRORMESSAGE :" << ret->comment << std::endl;
+   }
+   
    coil::sleep(m_sleepTime);
 
    std::cout << "[ArmImageGenerator] Down" << std::endl;
    carPos.carPos[2][3] = z_min;
-   ret1 = m_manipMiddle->movePTPCartesianAbs(carPos);
+   ret = m_manipMiddle->movePTPCartesianAbs(carPos);
+   if (ret->id != JARA_ARM::OK) {
+     std::cout << "ERROR in ServoON" << std::endl;
+     std::cout << " ERRORCODE    :" << ret->id << std::endl;
+     std::cout << " ERRORMESSAGE :" << ret->comment << std::endl;
+   }
+   
    coil::sleep(m_sleepTime);
 
    std::cout << "[ArmImageGenerator] Release" << std::endl;
-   m_manipMiddle->moveGripper(50);
+   ret = m_manipMiddle->moveGripper(50);
+   if (ret->id != JARA_ARM::OK) {
+     std::cout << "ERROR in ServoON" << std::endl;
+     std::cout << " ERRORCODE    :" << ret->id << std::endl;
+     std::cout << " ERRORMESSAGE :" << ret->comment << std::endl;
+   }
+   
    coil::sleep(m_sleepTime);
 
    std::cout << "[ArmImageGenerator] Up" << std::endl;
    carPos.carPos[2][3] = z;
-   ret1 = m_manipMiddle->movePTPCartesianAbs(carPos);
+   ret = m_manipMiddle->movePTPCartesianAbs(carPos);
+   if (ret->id != JARA_ARM::OK) {
+     std::cout << "ERROR in ServoON" << std::endl;
+     std::cout << " ERRORCODE    :" << ret->id << std::endl;
+     std::cout << " ERRORMESSAGE :" << ret->comment << std::endl;
+   }
+   
    coil::sleep(m_sleepTime);
 
    std::cout << "[ArmImageGenerator] Escape" << std::endl;
    //  m_jointPos->length(6);
-   m_jointPos[0] = M_PI/2;
-   m_jointPos[1] = 0;
-   m_jointPos[2] = M_PI/2;
-   m_jointPos[3] = 0;
-   m_jointPos[4] = M_PI/2;
-   m_jointPos[5] = 0;
-   m_manipMiddle->movePTPJointAbs(m_jointPos);  
+   m_jointPos[0] = m_camera_jointPos0;
+   m_jointPos[1] = m_camera_jointPos1;
+   m_jointPos[2] = m_camera_jointPos2;
+   m_jointPos[3] = m_camera_jointPos3;
+   m_jointPos[4] = m_camera_jointPos4;
+   m_jointPos[5] = m_camera_jointPos5;
+   
+   ret = m_manipMiddle->movePTPJointAbs(m_jointPos);
+   if (ret->id != JARA_ARM::OK) {
+     std::cout << "ERROR in ServoON" << std::endl;
+     std::cout << " ERRORCODE    :" << ret->id << std::endl;
+     std::cout << " ERRORMESSAGE :" << ret->comment << std::endl;
+   }
+   
    coil::sleep(m_sleepTime);
 
    JARA_ARM::CarPosWithElbow_var actual(new JARA_ARM::CarPosWithElbow());
    //JARA_ARM::RETURN_ID_var ret2 = m_manipCommon->getFeedbackPosJoint(actual);
-   JARA_ARM::RETURN_ID_var ret2 = m_manipMiddle->getFeedbackPosCartesian(actual);
+   
+   ret = m_manipMiddle->getFeedbackPosCartesian(actual);
+   if (ret->id != JARA_ARM::OK) {
+     std::cout << "ERROR in ServoON" << std::endl;
+     std::cout << " ERRORCODE    :" << ret->id << std::endl;
+     std::cout << " ERRORMESSAGE :" << ret->comment << std::endl;
+   }
 
    std::cout << "[ArmImageGenerator] Waiting for CameraImage...." << std::ends;
 
@@ -339,14 +455,17 @@ RTC::ReturnCode_t ArmImageGenerator::onActivated(RTC::UniqueId ec_id)
      << std::setw(2) << std::setfill('0') << localNow->tm_min
      << std::setw(2) << std::setfill('0') << localNow->tm_sec
      << ".png";
-  
+
+   coil::sleep(m_camera_wait_time);
+   
    std::string filename = ss.str();
 
 
  #if 1
    /// Capture Image and Save
    bool imageArrived = false;
-      //long counter = 0;
+   //long counter = 0;
+
   //Inport data check
   while (m_cameraIn.isNew() && (!imageArrived)) {
     m_cameraIn.read();
@@ -366,7 +485,8 @@ RTC::ReturnCode_t ArmImageGenerator::onActivated(RTC::UniqueId ec_id)
     m_buffer.create(height, width, CV_8UC1);
   
   long data_length = m_camera.data.image.raw_data.length();
-  // long image_size = width * height * channels;
+
+  //long image_size = width * height * channels;
   
   if (m_camera.data.image.format == Img::CF_RGB) {
     for (int i = 0; i<height; ++i)
@@ -398,45 +518,81 @@ RTC::ReturnCode_t ArmImageGenerator::onActivated(RTC::UniqueId ec_id)
 
 
   std::cout << "[ArmImageGenerator] Ready" << std::endl;
-  m_jointPos[0] = 0;
-  m_jointPos[1] = 0;
-  m_jointPos[2] = M_PI/2;
-  m_jointPos[3] = 0;
-  m_jointPos[4] = M_PI/2;
-  m_jointPos[5] = 0;
+  m_jointPos[0] = m_initial_jointPos0;
+  m_jointPos[1] = m_initial_jointPos1;
+  m_jointPos[2] = m_initial_jointPos2;
+  m_jointPos[3] = m_initial_jointPos3;
+  m_jointPos[4] = m_initial_jointPos4;
+  m_jointPos[5] = m_initial_jointPos5;
   m_manipMiddle->movePTPJointAbs(m_jointPos);  
   coil::sleep(m_sleepTime);
 
   std::cout << "[ArmImageGenerator] Reach" << std::endl;
   carPos.carPos[2][3] = z;
-  ret1 = m_manipMiddle->movePTPCartesianAbs(carPos);
+  ret = m_manipMiddle->movePTPCartesianAbs(carPos);
+   if (ret->id != JARA_ARM::OK) {
+     std::cout << "ERROR in ServoON" << std::endl;
+     std::cout << " ERRORCODE    :" << ret->id << std::endl;
+     std::cout << " ERRORMESSAGE :" << ret->comment << std::endl;
+   }
+  
   coil::sleep(m_sleepTime);
 
   std::cout << "[ArmImageGenerator] Down" << std::endl;
   carPos.carPos[2][3] = z_min;
-  ret1 = m_manipMiddle->movePTPCartesianAbs(carPos);
+  ret = m_manipMiddle->movePTPCartesianAbs(carPos);
+   if (ret->id != JARA_ARM::OK) {
+     std::cout << "ERROR in ServoON" << std::endl;
+     std::cout << " ERRORCODE    :" << ret->id << std::endl;
+     std::cout << " ERRORMESSAGE :" << ret->comment << std::endl;
+   }
+  
   coil::sleep(m_sleepTime);
 
   std::cout << "[ArmImageGenerator] Hold" << std::endl;
-  ret1 = m_manipMiddle->moveGripper(10);
+
+  double ratio = m_gripper_close_ratio > 1.0 ? 1.0 : m_gripper_close_ratio < 0.0 ? 0 : m_gripper_close_ratio;
+  ret = m_manipMiddle->moveGripper(100 * m_gripper_close_ratio);  //moveGripper(10);
+   if (ret->id != JARA_ARM::OK) {
+     std::cout << "ERROR in ServoON" << std::endl;
+     std::cout << " ERRORCODE    :" << ret->id << std::endl;
+     std::cout << " ERRORMESSAGE :" << ret->comment << std::endl;
+   }
+  
   coil::sleep(m_sleepTime);
 
   std::cout << "[ArmImageGenerator] Up" << std::endl;
   carPos.carPos[2][3] = z;
-  ret1 = m_manipMiddle->movePTPCartesianAbs(carPos);
+  ret = m_manipMiddle->movePTPCartesianAbs(carPos);
+   if (ret->id != JARA_ARM::OK) {
+     std::cout << "ERROR in ServoON" << std::endl;
+     std::cout << " ERRORCODE    :" << ret->id << std::endl;
+     std::cout << " ERRORMESSAGE :" << ret->comment << std::endl;
+   }
+  
   coil::sleep(m_sleepTime);
 
   std::cout << "[ArmImageGenerator] Ready" << std::endl;
-  m_jointPos[0] = 0;
-  m_jointPos[1] = 0;
-  m_jointPos[2] = M_PI/2;
-  m_jointPos[3] = 0;
-  m_jointPos[4] = M_PI/2;
-  m_jointPos[5] = 0;
-  m_manipMiddle->movePTPJointAbs(m_jointPos);  
+  m_jointPos[0] = m_initial_jointPos0;
+  m_jointPos[1] = m_initial_jointPos1;
+  m_jointPos[2] = m_initial_jointPos2;
+  m_jointPos[3] = m_initial_jointPos3;
+  m_jointPos[4] = m_initial_jointPos4;
+  m_jointPos[5] = m_initial_jointPos5;
+  
+  ret = m_manipMiddle->movePTPJointAbs(m_jointPos);
+   if (ret->id != JARA_ARM::OK) {
+     std::cout << "ERROR in ServoON" << std::endl;
+     std::cout << " ERRORCODE    :" << ret->id << std::endl;
+     std::cout << " ERRORMESSAGE :" << ret->comment << std::endl;
+   }
+  
   coil::sleep(m_sleepTime);
   std::cout << "------------------------------------------------------------" << std::endl;
 
+
+  m_JointLog.flush();
+  
   return RTC::RTC_OK;
 }
 
