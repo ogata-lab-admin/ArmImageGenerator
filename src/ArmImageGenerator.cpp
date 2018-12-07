@@ -50,17 +50,17 @@ static const char* armimagegenerator_spec[] =
 	"conf.default.wait_interval", "1.0",
     "conf.default.camera_wait_time", "3.0",
     "conf.default.gripper_close_ratio", "0.1",
-    "conf.default.camera_jointPos0", "M_PI/2",
+    "conf.default.camera_jointPos0", "1.57076",
     "conf.default.camera_jointPos1", "0",
-    "conf.default.camera_jointPos2", "M_PI/2",
+    "conf.default.camera_jointPos2", "1.57076",
     "conf.default.camera_jointPos3", "0",
-    "conf.default.camera_jointPos4", "M_PI/2",
+    "conf.default.camera_jointPos4", "1.57076",
     "conf.default.camera_jointPos5", "0",
     "conf.default.initial_jointPos0", "0",
     "conf.default.initial_jointPos1", "0",
-    "conf.default.initial_jointPos2", "M_PI/2",
+    "conf.default.initial_jointPos2", "1.57076",
     "conf.default.initial_jointPos3", "0",
-    "conf.default.initial_jointPos4", "M_PI/2",
+    "conf.default.initial_jointPos4", "1.57076",
     "conf.default.initial_jointPos5", "0",    
     
     // Widget
@@ -158,19 +158,19 @@ RTC::ReturnCode_t ArmImageGenerator::onInitialize()
   bindParameter("gripper_close_ratio", m_gripper_close_ratio, "0.1");
 
   // the position for taking a picture 
-  bindParameter("camera_jointPos0", m_camera_jointPos0, "M_PI/2");
+  bindParameter("camera_jointPos0", m_camera_jointPos0, "1.57076");
   bindParameter("camera_jointPos1", m_camera_jointPos1, "0");
-  bindParameter("camera_jointPos2", m_camera_jointPos2, "M_PI/2");
+  bindParameter("camera_jointPos2", m_camera_jointPos2, "1.57076");
   bindParameter("camera_jointPos3", m_camera_jointPos3, "0");
-  bindParameter("camera_jointPos4", m_camera_jointPos4, "M_PI/2");
+  bindParameter("camera_jointPos4", m_camera_jointPos4, "1.57076");
   bindParameter("camera_jointPos5", m_camera_jointPos5, "0");
 
   // the initial position
   bindParameter("initial_jointPos0", m_initial_jointPos0, "0");
   bindParameter("initial_jointPos1", m_initial_jointPos1, "0");
-  bindParameter("initial_jointPos2", m_initial_jointPos2, "M_PI/2");
+  bindParameter("initial_jointPos2", m_initial_jointPos2, "1.57076");
   bindParameter("initial_jointPos3", m_initial_jointPos3, "0");
-  bindParameter("initial_jointPos4", m_initial_jointPos4, "M_PI/2");
+  bindParameter("initial_jointPos4", m_initial_jointPos4, "1.57076");
   bindParameter("initial_jointPos5", m_initial_jointPos5, "0");
   
   // </rtc-template>
@@ -552,7 +552,7 @@ RTC::ReturnCode_t ArmImageGenerator::onActivated(RTC::UniqueId ec_id)
   std::cout << "[ArmImageGenerator] Hold" << std::endl;
 
   double ratio = m_gripper_close_ratio > 1.0 ? 1.0 : m_gripper_close_ratio < 0.0 ? 0 : m_gripper_close_ratio;
-  ret = m_manipMiddle->moveGripper(100 * m_gripper_close_ratio);  //moveGripper(10);
+  ret = m_manipMiddle->moveGripper(100 * ratio);  //moveGripper(10);
    if (ret->id != JARA_ARM::OK) {
      std::cout << "ERROR in ServoON" << std::endl;
      std::cout << " ERRORCODE    :" << ret->id << std::endl;
