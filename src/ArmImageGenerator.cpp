@@ -340,18 +340,23 @@ RTC::ReturnCode_t ArmImageGenerator::onActivated(RTC::UniqueId ec_id)
 
  RTC::ReturnCode_t ArmImageGenerator::onExecute(RTC::UniqueId ec_id)
  {
+   // range of x-axis [mm]
    double xlimit[2] = {120, 240};
+   // range of y-axis [mm]
    double ylimit[2] = {-120, 120};
+   // range of theta [rad]
    double thlimit[2] = {-M_PI+1.0e-10, M_PI-1.0e-10};
   
 
    double x = Uniform() * (xlimit[1] - xlimit[0]) + xlimit[0];
    double y = Uniform() * (ylimit[1] - ylimit[0]) + ylimit[0];
    double th = Uniform() * (thlimit[1] - thlimit[0]) + thlimit[0];
-
+   
+   // [mm] -> [m]
    x /= 1000.0;
    y /= 1000.0;
 
+   // range of z-axis [mm]/1000.0 -> [m]
    double z = 40 / 1000.0;
    double z_min = 10 / 1000.0;
 
