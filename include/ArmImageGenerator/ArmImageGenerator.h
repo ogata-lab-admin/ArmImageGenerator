@@ -317,6 +317,11 @@ class ArmImageGenerator
   float m_initial_jointPos4;
   float m_initial_jointPos5;
 
+  float m_xlim_toward;
+  float m_xlim_back;
+  float m_ylim_left;
+  float m_ylim_right;
+
   // </rtc-template>
 
   // DataInPort declaration
