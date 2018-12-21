@@ -61,7 +61,13 @@ static const char* armimagegenerator_spec[] =
     "conf.default.initial_jointPos2", "1.57076",
     "conf.default.initial_jointPos3", "0",
     "conf.default.initial_jointPos4", "1.57076",
-    "conf.default.initial_jointPos5", "0",    
+    "conf.default.initial_jointPos5", "0",
+    
+    "conf.default.xlim_back", "120",
+    "conf.default.xlim_toward", "240",
+    "conf.default.ylim_right", "120",
+    "conf.default.ylim_left", "-120",
+
     
     // Widget
     "conf.__widget__.debug", "text",
@@ -85,7 +91,11 @@ static const char* armimagegenerator_spec[] =
     "conf.__widget__.initial_jointPos3", "text",
     "conf.__widget__.initial_jointPos4", "text",
     "conf.__widget__.initial_jointPos5", "text",
-
+    
+    "conf.__widget__.xlim_back", "text",
+    "conf.__widget__.xlim_toward", "text",
+    "conf.__widget__.ylim_right", "text",
+    "conf.__widget__.ylim_left", "text",
     
     "conf.__widget__.gripper_close_ratio", "slider.0.1",
     // Constraints
@@ -172,6 +182,14 @@ RTC::ReturnCode_t ArmImageGenerator::onInitialize()
   bindParameter("initial_jointPos3", m_initial_jointPos3, "0");
   bindParameter("initial_jointPos4", m_initial_jointPos4, "1.57076");
   bindParameter("initial_jointPos5", m_initial_jointPos5, "0");
+
+  //range of x-axis from "back" to "toward" (from arm)
+  bindParameter("xlim_back", m_xlim_back, "120");
+  bindParameter("xlim_toward", m_xlim_toward, "240");
+
+  //range of y-axis from "left" to "right" (from arm)
+  bindParameter("ylim_right", m_ylim_right, "120");
+  bindParameter("ylim_left", m_ylim_left, "-120");
   
   // </rtc-template>
   
@@ -341,9 +359,9 @@ RTC::ReturnCode_t ArmImageGenerator::onActivated(RTC::UniqueId ec_id)
  RTC::ReturnCode_t ArmImageGenerator::onExecute(RTC::UniqueId ec_id)
  {
    // range of x-axis [mm]
-   double xlimit[2] = {120, 240};
+   double xlimit[2] = {m_xlim_back, m_xlim_toward}; //{120, 240}
    // range of y-axis [mm]
-   double ylimit[2] = {-120, 120};
+   double ylimit[2] = {m_ylim_left, m_ylim_right};//{-120, 120}
    // range of theta [rad]
    double thlimit[2] = {-M_PI+1.0e-10, M_PI-1.0e-10};
   
